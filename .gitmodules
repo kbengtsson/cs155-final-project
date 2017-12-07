@@ -1,3 +1,3 @@
-[submodule "PerlinNoise"]
-	path = PerlinNoise
-	url = git@github.com:kbengtsson/PerlinNoise.git
+[submodule "FastNoise"]
+	path = FastNoise
+	url = git@github.com:kbengtsson/FastNoise.git
