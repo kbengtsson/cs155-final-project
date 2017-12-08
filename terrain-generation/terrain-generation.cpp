@@ -16,6 +16,7 @@
 #include <math.h>
 #include <vector>
 #include <iostream>
+#include "FastNoise.h"
 
 // shader file names
 std::string vertexShader;
@@ -29,6 +30,7 @@ unsigned int cat_texture;
 double rotateX = 0, rotateY = 0, zoom = 0;
 int width = 100, height = 100;
 double xScale = 10.0 / width, yScale = 10.0 / height;
+double heightScale = 10.0;
 
 void DrawWithShader(){
 
@@ -40,20 +42,50 @@ void DrawWithShader(){
     glFrontFace(GL_CCW);
     glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
-    std::cout << "before loop" << std::endl;
+    FastNoise::FastNoise myNoise; // Create a FastNoise object
+    myNoise.SetNoiseType(FastNoise::Perlin); // Set the desired noise type
+
+    float heightMap[width][height]; // 2D heightmap to create terrain
+
+    for (int x = 0; x < width; x++)
+    {
+        for (int y = 0; y < height; y++)
+        {
+            heightMap[x][y] = myNoise.GetNoise(x,y);
+        }
+    }
+
     for (int row = 0; row < height - 1; ++row) {
         for (int col = 0; col < width - 1; ++col) {
-            glBegin(GL_TRIANGLE_STRIP); 
-                glVertex3f( col * xScale, row * yScale, 0.0f ); //vertex 1
-                glVertex3f( col * xScale, (row + 1) * yScale, 0.0f ); //vertex 2
-                glVertex3f( (col + 1) * xScale, row * yScale, 0.0f ); //vertex 3
-                glVertex3f( (col + 1) * xScale, (row + 1) * yScale, 0.0f ); //vertex 4
+            float z1 = heightScale*heightMap[row][col], z2 = heightScale*heightMap[row + 1][col], 
+                z3 = heightScale*heightMap[row][col + 1], z4 = heightScale*heightMap[row + 1][col + 1];
+            glBegin(GL_TRIANGLE_STRIP);
+                glVertex3f( col * xScale, row * yScale, z1 ); //vertex 1
+                glVertex3f( col * xScale, (row + 1) * yScale, z2 ); //vertex 2
+                glVertex3f( (col + 1) * xScale, row * yScale, z3 ); //vertex 3
+                glVertex3f( (col + 1) * xScale, (row + 1) * yScale, z4 ); //vertex 4
             glEnd();
         }
     }
 
     shader->UnBind();
 }
+
+// float * CreateNoise(int width, int height){
+//     FastNoise myNoise; // Create a FastNoise object
+//     myNoise.SetNoiseType(FastNoise::Perlin); // Set the desired noise type
+
+//     float heightMap[width][height]; // 2D heightmap to create terrain
+
+//     for (int x = 0; x < width; x++)
+//     {
+//         for (int y = 0; y < height; y++)
+//         {
+//             heightMap[x][y] = myNoise.GetNoise(x,y);
+//         }
+//     }
+// }
+
 
 void DisplayCallback(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -143,6 +175,7 @@ void init(void)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
+    //CreateNoise(width, height);
 }
 
 int main(int argc, char** argv){
