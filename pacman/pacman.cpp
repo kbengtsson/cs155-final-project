@@ -9,7 +9,6 @@
 // local
 #include "util.h"
 
-#include <iostream>
 
 void KeyCallback(unsigned char key, int x, int y);
 
@@ -83,7 +82,7 @@ void DisplayCallback(){
     glMatrixMode(GL_MODELVIEW); // wipe the modelview matrix
 
     glPushMatrix();
-        glTranslatef(xaxis, yaxis, 0.0);
+        // glTranslatef(xaxis, yaxis, 0.0);
     glPopMatrix();
 
     glLoadIdentity();
@@ -102,21 +101,6 @@ void ReshapeCallback(int w, int h){
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
-
-// void ReshapeCallback(int w, int h){
-//     glViewport(0, 0, w, h);
-
-//     glMatrixMode( GL_PROJECTION );
-//     glLoadIdentity();
-
-//     //!!
-//     //gluPerspective(1.0, double(w)/double(h), 1.5, 1.0);
-//     // glFrustum(-1.5f, 1.5f, -1.5f, 1.5f, 1.f, 5.f);    // perspective camera
-//     glOrtho(-1.5f, 1.5f, -1.5f, 1.5f, 1.f, 5.f);   // orthographic camera
-
-//     glMatrixMode(GL_MODELVIEW);
-//     glLoadIdentity();
-// }
 
 
 int main(int argc, char** argv){
