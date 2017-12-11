@@ -30,7 +30,7 @@ unsigned int cat_texture;
 double rotateX = 0, rotateY = 0, zoom = 0;
 int width = 100, height = 100;
 double xScale = 10.0 / width, yScale = 10.0 / height;
-double heightScale = 10.0;
+double heightScale = 3.0;
 
 void DrawWithShader(){
 
@@ -40,10 +40,12 @@ void DrawWithShader(){
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glFrontFace(GL_CCW);
-    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
     FastNoise::FastNoise myNoise; // Create a FastNoise object
     myNoise.SetNoiseType(FastNoise::Perlin); // Set the desired noise type
+
+    myNoise.SetFrequency(0.05);
 
     float heightMap[width][height]; // 2D heightmap to create terrain
 
@@ -57,20 +59,68 @@ void DrawWithShader(){
 
     for (int row = 0; row < height - 1; ++row) {
         for (int col = 0; col < width - 1; ++col) {
+            
+
+
+            // glBegin(GL_TRIANGLES);
+            // //glBegin(GL_TRIANGLE_STRIP);
+            //     glVertex3f( col * xScale, row * yScale, z1 ); //vertex 1
+            //     glVertex3f( col * xScale, (row + 1) * yScale, z2 ); //vertex 2
+            //     glVertex3f( (col + 1) * xScale, row * yScale, z3 ); //vertex 3
+            //     glVertex3f( (col + 1) * xScale, (row + 1) * yScale, z4 ); //vertex 4
+            // glEnd();
+
+            // Draw a triangle strip with 4 vertices
+
+           
+            float x1 = col * xScale, x2 = col * xScale, x3 = (col + 1) * xScale, x4 = (col + 1) * xScale;
+            float y1 = row * yScale, y2 = (row + 1) * yScale, y3 = row * yScale, y4 = (row + 1) * yScale;
             float z1 = heightScale*heightMap[row][col], z2 = heightScale*heightMap[row + 1][col], 
                 z3 = heightScale*heightMap[row][col + 1], z4 = heightScale*heightMap[row + 1][col + 1];
-            glBegin(GL_TRIANGLE_STRIP);
-                glVertex3f( col * xScale, row * yScale, z1 ); //vertex 1
-                glVertex3f( col * xScale, (row + 1) * yScale, z2 ); //vertex 2
-                glVertex3f( (col + 1) * xScale, row * yScale, z3 ); //vertex 3
-                glVertex3f( (col + 1) * xScale, (row + 1) * yScale, z4 ); //vertex 4
-            glEnd();
+
+            SetNormalAndDrawTriangle(x1, x2, x3,
+                                     y1, y2, y3,
+                                     z1, z2, z3);
+
+            // We put the vertices in this order to preserve the same direction of the vertices
+            SetNormalAndDrawTriangle(x3, x2, x4,
+                                    y3, y2, y4,
+                                    z3, z2, z4);
+
+            // SetNormalAndDrawTriangle(col * xScale, (col + 1) * xScale,(col + 1) * xScale,
+            //                         (row + 1) * yScale, row * yScale, (row + 1) * yScale, 
+            //                          z1, z2, z3);
+            // std::cout << z1 << " " << z2 << " " << z3 << " " << z4 << " " << std::endl;
         }
     }
 
     shader->UnBind();
 }
 
+void SetNormalAndDrawTriangle(float x1, float x2, float x3, 
+                              float y1, float y2, float y3, 
+                              float z1, float z2, float z3) {
+    float u1, u2, u3;
+    float v1, v2, v3;
+
+    u1 = x2 - x1; u2 = y2 - y1; u3 = z2 - z1;
+    v1 = x3 - x2; v2 = y3 - y2; v3 = z3 - z2; 
+
+    float n1 = u2*v3 - u3*v2;
+    float n2 = u3*v1 - u1*v3;
+    float n3 = u1*v2 - u2*v1;
+
+    float mag = sqrt(n1*n1 + n2*n2 + n3*n3); 
+
+    n1 /= mag; n2 /= mag; n3 /= mag;
+
+    glNormal3f(n1, n2, n3);
+    glBegin(GL_TRIANGLES);
+        glVertex3f(x1, y1, z1);
+        glVertex3f(x2, y2, z2);
+        glVertex3f(x3, y3, z3);
+    glEnd();
+}
 // float * CreateNoise(int width, int height){
 //     FastNoise myNoise; // Create a FastNoise object
 //     myNoise.SetNoiseType(FastNoise::Perlin); // Set the desired noise type
