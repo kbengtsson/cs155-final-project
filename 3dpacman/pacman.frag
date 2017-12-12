@@ -1,6 +1,10 @@
 varying vec3 n;
 varying vec3 vpos;
-varying vec3 line;
+varying vec4 pacman;
+varying vec4 black;
+varying vec4 shade1;
+varying vec4 shade2;
+varying vec4 shade3;
 
 void main()
 {	
@@ -12,11 +16,16 @@ void main()
 	float NL = dot(nVec, lVec); // dot product of N vector and L vector
 	float NV = dot(nVec, vVec); // dot product of N vector and V vector
 
-    // actual shading of the object by setting the colors
+    // actual shading (with toon shading) of the object 
 	if (abs(NV) < 0.3)  {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); // creates black contour lines
-    }
-    else  {
-    	gl_FragColor = vec4(1.0, 0.93, 0.0, 1.0); // creates pacman yellow
+        gl_FragColor = black; // creates black contour lines
+    } else if (abs(NL) < 0.15)  {
+        gl_FragColor = shade3; // creates dark shading
+    } else if (abs(NL) < 0.35)  {
+        gl_FragColor = shade2; // creates medium shading
+    } else if (abs(NL) < 0.55)  {
+        gl_FragColor = shade1; // creates light shading
+    } else  {
+    	gl_FragColor = pacman; // creates pacman yellow
     }
 }
