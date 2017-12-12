@@ -19,11 +19,11 @@ void main()
     // actual shading (with toon shading) of the object 
 	if (abs(NV) < 0.3)  {
         gl_FragColor = black; // creates black contour lines
-    } else if (abs(NL) < 0.15)  {
+    } else if (abs(NV) < 0.5 && abs(NL) < 0.15)  {
         gl_FragColor = shade3; // creates dark shading
-    } else if (abs(NL) < 0.35)  {
+    } else if (abs(NV) < 0.7 && abs(NL) < 0.35)  {
         gl_FragColor = shade2; // creates medium shading
-    } else if (abs(NL) < 0.55)  {
+    } else if (abs(NV) < 0.9 && abs(NL) < 0.55)  {
         gl_FragColor = shade1; // creates light shading
     } else  {
     	gl_FragColor = pacman; // creates pacman yellow
