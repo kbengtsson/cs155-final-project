@@ -289,13 +289,17 @@ int main(int argc, char** argv){
     // ambient color
     GLfloat ambient0[]={1.0, 0.98, 0.0, 1.0};
     GLfloat ambient1[]={0.4, .4, 0.4};
+    GLfloat ambient2[]={1.0, 0.98, 0.0, 1.0};
     glLightfv(GL_LIGHT0, GL_AMBIENT, ambient0);
+    glLightfv(GL_LIGHT2, GL_AMBIENT, ambient2);
     glMaterialfv(GL_FRONT, GL_AMBIENT, ambient1);
 
     // diffuse color
     GLfloat diffuse0[]={1.0, 1.0, 1.0};
     GLfloat diffuse1[]={0.6, 0.6, 0.6};
+    GLfloat diffuse2[]={1.0, 1.0, 1.0};
     glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse0);
+    glLightfv(GL_LIGHT2, GL_DIFFUSE, diffuse2);
     glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse1);
 
     // specular color
