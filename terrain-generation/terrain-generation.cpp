@@ -17,20 +17,22 @@
 #include <vector>
 #include <iostream>
 #include "FastNoise.h"
+using namespace std;
 
 #define width 500
 #define height 500 
-#define radius 0.0
+#define radius 0.2
 // shader file names
 std::string vertexShader;
 std::string fragmentShader;
 
 SimpleShaderProgram *shader;
+SimpleShaderProgram *shader2;
 GLuint ProgramObject;
 
 unsigned int cat_texture;
 
-int seed, moveSide = 0, moveUp = 0, rotate = 0;
+int seed, moveSide = 0, moveUp = 0, rotatePacman = 0;
 
 double rotateX = 0, rotateY = 0, zoom = 0;
 double xScale = 1.0 / 50.0, zScale = 1.0 / 50.0;
@@ -41,6 +43,157 @@ float heightMap[width][height]; // 2D heightmap to create terrain
 
 double intensity = 1.0;
 double red = 1.0, green = 1.0, blue = 1.0;
+
+// variables used to parse obj files
+struct Vertex3f   { float _x, _y, _z; } ;
+struct Texture3f   { float _x, _y, _z; } ;
+struct Normal3f    { float _x, _y, _z; };
+struct Triangle3f { Vertex3f _a, _b, _c; Texture3f _ta, _tb, _tc; Normal3f _na, _nb, _nc; };
+
+vector<Vertex3f> vertexLoc;   // v
+vector<Texture3f> texture;     // vt
+vector<Normal3f> normals;     // vn
+vector<Triangle3f> triangles;   // f
+
+// http://www.cplusplus.com/doc/tutorial/files/
+int parseOBJ() {
+    string line;
+    ifstream myfile("pman.obj");
+    if (myfile.is_open()) {
+        while (getline (myfile, line)) {
+            // vertex locations
+            if (line.substr(0,2) == "v ") {
+                Vertex3f vLoc;
+                istringstream rest(line.substr(2));
+                rest >> vLoc._x;
+                rest >> vLoc._y;
+                rest >> vLoc._z;
+                vertexLoc.push_back(vLoc);
+            }
+            // texture coordinates
+            if (line.substr(0,2) == "vt") {
+                Texture3f textCoord;
+                istringstream rest(line.substr(2));
+                rest >> textCoord._x;
+                rest >> textCoord._y;
+                rest >> textCoord._z;
+
+                texture.push_back(textCoord);
+            }
+            // vertex normals from obj file
+            if (line.substr(0,2) == "vn") {
+                Normal3f normalCoord;
+                istringstream rest(line.substr(2));
+                rest >> normalCoord._x;
+                rest >> normalCoord._y;
+                rest >> normalCoord._z;
+
+                normals.push_back(normalCoord);
+            }
+            // face data (triangles)
+            if (line.substr(0,2) == "f ") {
+                Triangle3f triFace;
+                istringstream rest(line.substr(2));
+                string a, b, c;
+                rest >> a; // first chunk of the face
+                rest >> b; // second chunk of the face
+                rest >> c; // third chunk of the face
+
+                int v, vt, vn;
+                string parts[3] = {a, b, c};
+                // loop that goes through three times to grab each data from the face
+                for (int i = 0; i < 3; ++i) {
+                    if (sscanf(parts[i].c_str(), "%i/%i/%i", &v, &vt, &vn) >= 2) {
+                        if (i == 0) { // first chunk of the face, v1/t1 or v1/t1/n1
+                            triFace._a = vertexLoc[v - 1];
+                            triFace._ta = texture[vt - 1];
+                            triFace._na = normals[vn - 1];
+                        }
+                        if (i == 1) { // second chunk of the face, v2/t2 or v2/t2/n2
+                            triFace._b = vertexLoc[v - 1];
+                            triFace._tb = texture[vt - 1];
+                            triFace._nb = normals[vn - 1];
+
+                        }
+                        if (i == 2) { // third chunk of the face, v3/t3 or v3/t3/n3
+                            triFace._c = vertexLoc[v - 1];
+                            triFace._tc = texture[vt - 1];
+                            triFace._nc = normals[vn - 1];
+                        }
+                    }
+                    else if (sscanf(parts[i].c_str(), "%i//%i", &v, &vn) >= 2) {
+                        if (i == 0) { // first chunk of the face, v1//n1
+                            triFace._a = vertexLoc[v - 1];
+                            triFace._na = normals[vn - 1];
+                        }
+                        if (i == 1) { // second chunk of the face, v2//n2
+                            triFace._b = vertexLoc[v - 1];
+                            triFace._nb = normals[vn - 1];
+
+                        }
+                        if (i == 2) { // third chunk of the face, v3//n3
+                            triFace._c = vertexLoc[v - 1];
+                            triFace._nc = normals[vn - 1];
+                        }
+                    }
+                    else if (sscanf(parts[i].c_str(), "%i", &v) == 1) {
+                        if (i == 0) { // first chunk of the face, v1
+                            triFace._a = vertexLoc[v - 1];
+                        }
+                        if (i == 1) { // second chunk of the face, v2
+                            triFace._b = vertexLoc[v - 1];
+                        }
+                        if (i == 2) { // third chunk of the face, v3
+                            triFace._c = vertexLoc[v - 1];
+                        }
+                    }
+                }
+            triangles.push_back(triFace);
+            }
+        }
+    }
+    myfile.close();
+    return 0;
+}
+
+void DrawPacman(){
+    parseOBJ();
+    glBegin(GL_TRIANGLES);
+    for (int i = 0; i < triangles.size(); ++i){
+        // retrieve stored geometry and colors:
+        float x1, y1, x2, y2, x3, y3, z1, z2, z3;
+        float tx1,ty1,tz1,tx2,ty2,tz2,tx3,ty3,tz3;
+        float nx1,ny1,nz1,nx2,ny2,nz2,nx3,ny3,nz3;
+
+        // vertices of the triangle
+        x1 = triangles[i]._a._x;   y1 = triangles[i]._a._y;     z1 = triangles[i]._a._z;
+        x2 = triangles[i]._b._x;   y2 = triangles[i]._b._y;     z2 = triangles[i]._b._z;
+        x3 = triangles[i]._c._x;   y3 = triangles[i]._c._y;     z3 = triangles[i]._c._z;
+
+        // textures
+        tx1 = triangles[i]._ta._x;   ty1 = triangles[i]._ta._y;     tz1 = triangles[i]._ta._z;
+        tx2 = triangles[i]._tb._x;   ty2 = triangles[i]._tb._y;     tz2 = triangles[i]._tb._z;
+        tx3 = triangles[i]._tc._x;   ty3 = triangles[i]._tc._y;     tz3 = triangles[i]._tc._z;
+
+        // normals taken from the obj file
+        nx1 = triangles[i]._na._x;   ny1 = triangles[i]._na._y;     nz1 = triangles[i]._na._z;
+        nx2 = triangles[i]._nb._x;   ny2 = triangles[i]._nb._y;     nz2 = triangles[i]._nb._z;
+        nx3 = triangles[i]._nc._x;   ny3 = triangles[i]._nc._y;     nz3 = triangles[i]._nc._z;
+
+        glNormal3f(nx1, ny1, nz1);
+        glTexCoord3f(tx1, ty1, tz1);
+        glVertex3f(x1, y1, z1);
+
+        glNormal3f(nx2, ny2, nz2);
+        glTexCoord3f(tx2, ty2, tz2);
+        glVertex3f(x2, y2, z2);
+
+        glNormal3f(nx3, ny3, nz3);
+        glTexCoord3f(tx3, ty3, tz3);
+        glVertex3f(x3, y3, z3);
+    }
+    glEnd();
+}
 
 void DrawWithShader(){
 
@@ -116,15 +269,19 @@ void DrawWithShader(){
     }
     shader->UnBind();
 
-    std::cout << "Move Side: " << moveSide << " Move Up: " << moveUp << std::endl;
-    std::cout << "Height Map Coords: X: " << width/2 + moveSide << " Z: " << height/2 + moveUp << std::endl;
-    std::cout << "Teapot Position: X: " << moveSide*xScale << " Y: " << heightMap[width/2 + moveSide][height/2 + moveUp]*heightScale << " Z: " << moveUp*zScale << std::endl;
+    // std::cout << "Move Side: " << moveSide << " Move Up: " << moveUp << std::endl;
+    // std::cout << "Height Map Coords: X: " << width/2 + moveSide << " Z: " << height/2 + moveUp << std::endl;
+    // std::cout << "Teapot Position: X: " << moveSide*xScale << " Y: " << heightMap[width/2 + moveSide][height/2 + moveUp]*heightScale << " Z: " << moveUp*zScale << std::endl;
 
+    shader2->Bind();
     glPushMatrix();
-        glTranslatef(moveSide*xScale, heightMap[height/2 + moveUp][width/2 + moveSide]*heightScale, moveUp*zScale);
-        glRotatef(rotate, 0, 1, 0);
-        glutSolidTeapot(0.2);
+        glTranslatef(moveSide*xScale, heightMap[height/2 + moveUp][width/2 + moveSide]*heightScale + radius, moveUp*zScale);
+        glRotatef(rotatePacman, 0, 1, 0);
+        glScalef(0.2,0.2,0.2);
+        DrawPacman();
     glPopMatrix();
+
+    shader2->UnBind();
 }
 
 void SetNormalAndDrawTriangle(float x1, float x2, float x3, 
@@ -233,19 +390,19 @@ void KeyCallback(unsigned char key, int x, int y)
             break;
         case 't':
             moveUp -= 5;
-            rotate = 90;
+            rotatePacman = 90;
             break;
         case 'g':
             moveUp += 5;
-            rotate = -90;
+            rotatePacman = -90;
             break;
         case 'f':
             moveSide -= 5;
-            rotate = 180;
+            rotatePacman = 180;
             break;
         case 'h':
             moveSide += 5;
-            rotate = 0;
+            rotatePacman = 0;
             break;
         default:
             break;
@@ -278,6 +435,15 @@ void Setup()
     shader = new SimpleShaderProgram();
     shader->LoadVertexShader(vertexShader);
     shader->LoadFragmentShader(fragmentShader);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+}
+
+void SetupPacmanShader()
+{
+    shader2 = new SimpleShaderProgram();
+    shader2->LoadVertexShader("../3dpacman/pacman.vert");
+    shader2->LoadFragmentShader("../3dpacman/pacman.frag");
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 }
@@ -337,6 +503,7 @@ int main(int argc, char** argv){
     #endif
 
     Setup();
+    SetupPacmanShader();
 
         // Enable lighting
     glEnable(GL_LIGHTING);  // turn on lighting (state variable)
