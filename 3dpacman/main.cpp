@@ -43,7 +43,7 @@ vector<Triangle3f> triangles;   // f
 // http://www.cplusplus.com/doc/tutorial/files/
 int parseOBJ() {
     string line;
-    ifstream myfile("pacman.obj");
+    ifstream myfile("pman.obj");
     if (myfile.is_open()) {
         while (getline (myfile, line)) {
             // vertex locations
