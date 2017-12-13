@@ -20,6 +20,7 @@
 
 #define width 500
 #define height 500 
+#define radius 0.0
 // shader file names
 std::string vertexShader;
 std::string fragmentShader;
@@ -29,7 +30,7 @@ GLuint ProgramObject;
 
 unsigned int cat_texture;
 
-int seed;
+int seed, moveSide = 0, moveUp = 0, rotate = 0;
 
 double rotateX = 0, rotateY = 0, zoom = 0;
 double xScale = 1.0 / 50.0, zScale = 1.0 / 50.0;
@@ -82,11 +83,11 @@ void DrawWithShader(){
     // Populate array with Noise values
     for (int x = 0; x < width; x++)
     {
-        for (int y = 0; y < height; y++)
+        for (int z = 0; z < height; z++)
         {
-            heightMap[x][y] = noise1.GetNoise(x,y) + 
-                              noise2.GetNoise(x,y)*0.5 + 
-                              noise3.GetNoise(x,y)*0.25;
+            heightMap[x][z] = noise1.GetNoise(x,z) + 
+                              noise2.GetNoise(x,z)*0.5 + 
+                              noise3.GetNoise(x,z)*0.25;
         }
     }
 
@@ -113,9 +114,17 @@ void DrawWithShader(){
 
         }
     }
-
-
     shader->UnBind();
+
+    std::cout << "Move Side: " << moveSide << " Move Up: " << moveUp << std::endl;
+    std::cout << "Height Map Coords: X: " << width/2 + moveSide << " Z: " << height/2 + moveUp << std::endl;
+    std::cout << "Teapot Position: X: " << moveSide*xScale << " Y: " << heightMap[width/2 + moveSide][height/2 + moveUp]*heightScale << " Z: " << moveUp*zScale << std::endl;
+
+    glPushMatrix();
+        glTranslatef(moveSide*xScale, heightMap[height/2 + moveUp][width/2 + moveSide]*heightScale, moveUp*zScale);
+        glRotatef(rotate, 0, 1, 0);
+        glutSolidTeapot(0.2);
+    glPopMatrix();
 }
 
 void SetNormalAndDrawTriangle(float x1, float x2, float x3, 
@@ -139,13 +148,13 @@ void SetNormalAndDrawTriangle(float x1, float x2, float x3,
     glBegin(GL_TRIANGLES);
         float avgHeight = (y1 + y2 + y3) / 3.0;
         if (avgHeight < -1.0) {
-            glColor3f(0.0,0.0,0.85);
+            glColor3f(0.0,.467,0.745);
         }
         else if (avgHeight < -0.5) {
-            glColor3f(0.0,0.85, 0.0);
+            glColor3f(0.0,104.0/255.0, 10.0/255.0);
         }
         else if (avgHeight < 1.5) {
-            glColor3f(0.3,0.3, 0.3);
+            glColor3f(51.0/255.0,25.0/255.0, 0.0);
         }
         else {
             glColor3f(1.0,1.0,1.0);
@@ -207,7 +216,6 @@ void KeyCallback(unsigned char key, int x, int y)
         case 'a':
             rotateX += 5;
             break;
-
         case 'd':
             rotateX -= 5;
             break;
@@ -223,7 +231,22 @@ void KeyCallback(unsigned char key, int x, int y)
         case 'r':
             seed = rand();
             break;
-
+        case 't':
+            moveUp -= 5;
+            rotate = 90;
+            break;
+        case 'g':
+            moveUp += 5;
+            rotate = -90;
+            break;
+        case 'f':
+            moveSide -= 5;
+            rotate = 180;
+            break;
+        case 'h':
+            moveSide += 5;
+            rotate = 0;
+            break;
         default:
             break;
     }
