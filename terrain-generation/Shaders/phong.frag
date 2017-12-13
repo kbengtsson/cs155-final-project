@@ -9,8 +9,8 @@ void main(void)
     vec4 I_spec = gl_LightSource[0].specular;
 
     // Hard code some colors for the material
-    vec4 M_amb = vec4(.5,0.2,0.6,1.0);
-    vec4 M_diff = vec4(.5,0.2,0.6,1.0);
+    vec4 M_amb = gl_Color;
+    vec4 M_diff = gl_Color;
     vec4 M_spec = vec4(0.5,0.5,0.5,1.0);
 
     vec3 L = normalize(gl_LightSource[0].position.xyz - v);

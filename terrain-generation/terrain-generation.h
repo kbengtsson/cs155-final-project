@@ -37,6 +37,8 @@
 void SetNormalAndDrawTriangle(float x1, float x2, float x3, 
                               float y1, float y2, float y3, 
                               float z1, float z2, float z3);
+
+void RandomizeColors();
 //
 // Headers.
 //

@@ -18,6 +18,8 @@
 #include <iostream>
 #include "FastNoise.h"
 
+#define width 500
+#define height 500 
 // shader file names
 std::string vertexShader;
 std::string fragmentShader;
@@ -27,14 +29,34 @@ GLuint ProgramObject;
 
 unsigned int cat_texture;
 
+int seed;
+
 double rotateX = 0, rotateY = 0, zoom = 0;
-int width = 100, height = 100;
-double xScale = 10.0 / width, yScale = 10.0 / height;
+double xScale = 1.0 / 50.0, zScale = 1.0 / 50.0;
+double xOffset = -(width*xScale) / 2.0, zOffset = -(height*zScale)/2.0;
 double heightScale = 3.0;
+
+float heightMap[width][height]; // 2D heightmap to create terrain
+
+double intensity = 1.0;
+double red = 1.0, green = 1.0, blue = 1.0;
 
 void DrawWithShader(){
 
+    // glBegin(GL_QUADS);
+    //      glColor3f(0.0,1.0,0.0);
+    //      glVertex3f(-0.5,1.0,-0.5);
+    //      glVertex3f(0.5,1.0,-0.5);
+    //      glVertex3f(0.5,1,0.5);
+    //      glVertex3f(-0.5,1.0,0.5);
+    // glEnd();
+
     shader->Bind();
+
+    shader->SetUniform("intensity", intensity);
+    shader->SetUniform("red", red);
+    shader->SetUniform("green", green);
+    shader->SetUniform("blue", blue);
 
     // shader->SetUniform("intensity", intensity);
 
@@ -42,57 +64,56 @@ void DrawWithShader(){
     glFrontFace(GL_CCW);
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
-    FastNoise::FastNoise myNoise; // Create a FastNoise object
-    myNoise.SetNoiseType(FastNoise::Perlin); // Set the desired noise type
+    FastNoise::FastNoise noise1; // Create a FastNoise object
+    noise1.SetNoiseType(FastNoise::Perlin); // Set the desired noise type
+    noise1.SetFrequency(0.005);
+    noise1.SetSeed(seed);
 
-    myNoise.SetFrequency(0.05);
+    FastNoise::FastNoise noise2;
+    noise2.SetNoiseType(FastNoise::Perlin);
+    noise2.SetFrequency(0.01);
+    noise2.SetSeed(seed);
 
-    float heightMap[width][height]; // 2D heightmap to create terrain
+    FastNoise::FastNoise noise3;
+    noise3.SetNoiseType(FastNoise::Perlin);
+    noise3.SetFrequency(0.02);
+    noise3.SetSeed(seed);
 
+    // Populate array with Noise values
     for (int x = 0; x < width; x++)
     {
         for (int y = 0; y < height; y++)
         {
-            heightMap[x][y] = myNoise.GetNoise(x,y);
+            heightMap[x][y] = noise1.GetNoise(x,y) + 
+                              noise2.GetNoise(x,y)*0.5 + 
+                              noise3.GetNoise(x,y)*0.25;
         }
     }
 
     for (int row = 0; row < height - 1; ++row) {
         for (int col = 0; col < width - 1; ++col) {
-            
-
-
-            // glBegin(GL_TRIANGLES);
-            // //glBegin(GL_TRIANGLE_STRIP);
-            //     glVertex3f( col * xScale, row * yScale, z1 ); //vertex 1
-            //     glVertex3f( col * xScale, (row + 1) * yScale, z2 ); //vertex 2
-            //     glVertex3f( (col + 1) * xScale, row * yScale, z3 ); //vertex 3
-            //     glVertex3f( (col + 1) * xScale, (row + 1) * yScale, z4 ); //vertex 4
-            // glEnd();
-
-            // Draw a triangle strip with 4 vertices
-
            
-            float x1 = col * xScale, x2 = col * xScale, x3 = (col + 1) * xScale, x4 = (col + 1) * xScale;
-            float y1 = row * yScale, y2 = (row + 1) * yScale, y3 = row * yScale, y4 = (row + 1) * yScale;
-            float z1 = heightScale*heightMap[row][col], z2 = heightScale*heightMap[row + 1][col], 
-                z3 = heightScale*heightMap[row][col + 1], z4 = heightScale*heightMap[row + 1][col + 1];
+            float x1 = col * xScale + xOffset, x2 = col * xScale + xOffset, 
+                  x3 = (col + 1) * xScale + xOffset, x4 = (col + 1) * xScale + xOffset;
+
+            float y1 = heightScale*heightMap[row][col], y2 = heightScale*heightMap[row + 1][col], 
+                y3 = heightScale*heightMap[row][col + 1], y4 = heightScale*heightMap[row + 1][col + 1];
+
+            float z1 = row * zScale + zOffset, z2 = (row + 1) * zScale + zOffset, 
+                  z3 = row * zScale + zOffset, z4 = (row + 1) * zScale + zOffset;
+            
 
             SetNormalAndDrawTriangle(x1, x2, x3,
                                      y1, y2, y3,
                                      z1, z2, z3);
 
-            // We put the vertices in this order to preserve the same direction of the vertices
             SetNormalAndDrawTriangle(x3, x2, x4,
-                                    y3, y2, y4,
-                                    z3, z2, z4);
+                                     y3, y2, y4,
+                                     z3, z2, z4);
 
-            // SetNormalAndDrawTriangle(col * xScale, (col + 1) * xScale,(col + 1) * xScale,
-            //                         (row + 1) * yScale, row * yScale, (row + 1) * yScale, 
-            //                          z1, z2, z3);
-            // std::cout << z1 << " " << z2 << " " << z3 << " " << z4 << " " << std::endl;
         }
     }
+
 
     shader->UnBind();
 }
@@ -116,26 +137,25 @@ void SetNormalAndDrawTriangle(float x1, float x2, float x3,
 
     glNormal3f(n1, n2, n3);
     glBegin(GL_TRIANGLES);
+        float avgHeight = (y1 + y2 + y3) / 3.0;
+        if (avgHeight < -1.0) {
+            glColor3f(0.0,0.0,0.85);
+        }
+        else if (avgHeight < -0.5) {
+            glColor3f(0.0,0.85, 0.0);
+        }
+        else if (avgHeight < 1.5) {
+            glColor3f(0.3,0.3, 0.3);
+        }
+        else {
+            glColor3f(1.0,1.0,1.0);
+        }
+
         glVertex3f(x1, y1, z1);
         glVertex3f(x2, y2, z2);
         glVertex3f(x3, y3, z3);
     glEnd();
 }
-// float * CreateNoise(int width, int height){
-//     FastNoise myNoise; // Create a FastNoise object
-//     myNoise.SetNoiseType(FastNoise::Perlin); // Set the desired noise type
-
-//     float heightMap[width][height]; // 2D heightmap to create terrain
-
-//     for (int x = 0; x < width; x++)
-//     {
-//         for (int y = 0; y < height; y++)
-//         {
-//             heightMap[x][y] = myNoise.GetNoise(x,y);
-//         }
-//     }
-// }
-
 
 void DisplayCallback(){
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -194,6 +214,15 @@ void KeyCallback(unsigned char key, int x, int y)
         case 's':
             rotateY -= 5;
             break;
+        case 'i':
+            intensity = fmin(1.0, intensity + 0.1);
+            break;
+        case 'u':
+            intensity = fmax(-1.0, intensity - 0.1);
+            break;
+        case 'r':
+            seed = rand();
+            break;
 
         default:
             break;
@@ -204,8 +233,21 @@ void KeyCallback(unsigned char key, int x, int y)
 
 void MouseCallback(int button, int state, int x, int y)
 {
+    switch(button){   
+        case GLUT_LEFT_BUTTON:
+            RandomizeColors();
+            break;
+        default:
+            break;
+    }
     glFlush();
     glutPostRedisplay();   
+}
+
+void RandomizeColors(){
+    red = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    green = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    blue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 }
 
 void Setup()
@@ -225,7 +267,9 @@ void init(void)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
+    seed = rand();
     //CreateNoise(width, height);
+
 }
 
 int main(int argc, char** argv){
@@ -240,11 +284,13 @@ int main(int argc, char** argv){
     vertexShader   = std::string(argv[1]);
     fragmentShader = std::string(argv[2]);
 
+    seed = rand();
+
     // Initialize GLUT
     glutInit(&argc, argv);
     glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowPosition(20, 20);
-    glutInitWindowSize(640, 480);
+    glutInitWindowSize(1280, 720);
     glutCreateWindow("CS155 Assignment Final Project");
     init();
 
@@ -280,7 +326,7 @@ int main(int argc, char** argv){
     glLightfv(GL_LIGHT0, GL_POSITION, light0_pos);
 
     // diffuse color
-    GLfloat diffuse0[]={.8, 0.2, 0.2};
+    GLfloat diffuse0[]={.2, 0.2, 0.22};
     glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse0);
 
     // specular color
@@ -288,7 +334,7 @@ int main(int argc, char** argv){
     glLightfv(GL_LIGHT0, GL_SPECULAR, specular0);
 
     // ambient color
-    GLfloat ambient0[]={0.8, 0.2, 0.2};
+    GLfloat ambient0[]={0.2, 0.2, 0.22};
     glLightfv(GL_LIGHT0, GL_AMBIENT, ambient0);
 
     glutDisplayFunc(DisplayCallback);
