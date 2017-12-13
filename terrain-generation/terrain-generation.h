@@ -39,6 +39,8 @@ void SetNormalAndDrawTriangle(float x1, float x2, float x3,
                               float z1, float z2, float z3);
 
 void RandomizeColors();
+
+void DrawPacman();
 //
 // Headers.
 //
