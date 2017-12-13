@@ -166,23 +166,6 @@ void DrawWithShader(){
         nx2 = triangles[i]._nb._x;   ny2 = triangles[i]._nb._y;     nz2 = triangles[i]._nb._z;
         nx3 = triangles[i]._nc._x;   ny3 = triangles[i]._nc._y;     nz3 = triangles[i]._nc._z;
 
-        /*  Commented this out because we are now taking the normals from the obj file
-        // normals calculated from HW4 using face normals
-        float u1, v1, u2, v2, u3, v3, n1, n2, n3, mag;
-
-        u1 = (x2 - x1);        u2 = (y2 - y1);        u3 = (z2 - z1);
-        v1 = (x3 - x1);        v2 = (y3 - y1);        v3 = (z3 - z1);
-
-        n1 = (u2 * v3) - (v3 * u2);
-        n2 = (u3 * v1) - (u1 * v3);
-        n3 = (u1 * v2) - (u2 * v1);
-        mag = n1*n1 + n2*n2 + n3*n3;
-
-        n1 = n1/sqrt(mag);
-        n2 = n2/sqrt(mag);
-        n3 = n3/sqrt(mag);
-        */
-
         glNormal3f(nx1, ny1, nz1);
         glTexCoord3f(tx1, ty1, tz1);
         glVertex3f(x1, y1, z1);
@@ -256,7 +239,7 @@ int main(int argc, char** argv){
 
     // Check for the right number of arguments!
     if(!(argc == 3)){
-        printf("usage: ./hw5 <vertex shader> <fragment shader> \n");
+        printf("usage: ./pacman <vertex shader> <fragment shader> \n");
         return 0;
     }
 
@@ -269,7 +252,7 @@ int main(int argc, char** argv){
     glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowPosition(20, 20);
     glutInitWindowSize(640, 480);
-    glutCreateWindow("CS155 Assignment 5");
+    glutCreateWindow("CS155 Final Project");
 
     //
     // Initialize GLEW
