@@ -14,3 +14,4 @@ Kevin worked on creating the randomly generated terrain using Perlin noise and F
 ```
 ./terrain-generation terrain-shaders/phong.vert terrain-shaders/phong.frag
 ```
+Each step should only take a couple of seconds! If not, something has likely gone wrong.
