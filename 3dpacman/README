@@ -1,7 +1,17 @@
-To get started, you can either use the provided Visual Studio .sln (VS2012), or the Makefile. The Makefile provides build capability for Cygwin, Linux, or OSX operating systems.
+pman_faces.obj:
+Pac-Man with a small number of faces such that if we were to use this obj file we would see the faces on his body.
 
-The Makefile has been confirmed to work as-is in the Myth cluster.
+pman_smooth.obj:
+In an attempt to not show the faces, we selected the "Smooth Groups" option in Blender when exporting the obj file. Using this obj file, we cannot see the faces on Pac-Man, however because there are not a lot of faces the mouth appears to be very jaggedy.
 
-VS users: in the case that you experience an error in which <glut32.dll> cannot be found, it has been included with the starter files. You should copy this file to the Debug/ and Release/ folders generated at compile time.
+medium_faces.obj:
+This Pac-Man uses 4x as many faces as pman_faces. You can still see the individual faces using this obj file, but it is not as prominent.
 
-If you experience build problems, please make a post on Piazza or contact the staff list immediately so we can get you ready to go!
+medium_smooth.obj:
+In a similar situation, we attempted to smooth out Pac-Man, and while it is successful in smoothing out the body, Pac-Man's mouth is still jaggedy.
+
+more_faces.obj:
+This Pac-Man has 4x as many faces as medium_faces, so the faces are not as visible on Pac-Man. However, because there are so many faces in this file, the runtime is a lot slower. 
+
+more_smooth.obj:
+Similarly, this obj file was successful in smoothing out the body and because there are more faces the mouth is not as jaggedy. However, the response of the keyboard functions using this obj file is slow. 
