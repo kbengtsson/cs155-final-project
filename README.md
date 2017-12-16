@@ -22,3 +22,5 @@ You can navigate using the WASD keys to rotate the camera, TFGH to move Pacman a
 
 # Final image:
 ![Pacman](https://raw.githubusercontent.com/kbengtsson/cs155-final-project/master/pacman-final.jpg)
+
+Try to use the instructions above to construct this image!
