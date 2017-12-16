@@ -6,6 +6,7 @@ Annalise worked on building a 2D and 3D Pac-Man using OpenGL. She also worked on
 
 Kevin worked on creating the randomly generated terrain using Perlin noise and FastNoise, coloring it based on height, creating the shaders for it, and putting Pac-Man into the scene to traverse over the terrain.
 
+Brendan worked on the smoothing and was able to smooth objects provided as obj files. 
 # How to run the interactive Pac-Man program:
 
 1. In terminal, navigate to the terrain-generation folder
