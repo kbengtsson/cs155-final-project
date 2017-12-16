@@ -15,3 +15,7 @@ Kevin worked on creating the randomly generated terrain using Perlin noise and F
 ./terrain-generation terrain-shaders/phong.vert terrain-shaders/phong.frag
 ```
 Each step should only take a couple of seconds! If not, something has likely gone wrong.
+
+# Using the program:
+
+You can navigate using the WASD keys to rotate the camera, TFGH to move Pacman around on the X-Z plane, Z and X to zoom in and out respectively and R to randomize the generated terrain.
