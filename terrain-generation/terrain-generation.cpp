@@ -58,7 +58,7 @@ vector<Triangle3f> triangles;   // f
 // http://www.cplusplus.com/doc/tutorial/files/
 int parseOBJ() {
     string line;
-    ifstream myfile("pman.obj");
+    ifstream myfile("pacman-obj-files/more_smooth.obj");
     if (myfile.is_open()) {
         while (getline (myfile, line)) {
             // vertex locations
@@ -382,19 +382,19 @@ void KeyCallback(unsigned char key, int x, int y)
             break;
         case 't':
             moveUp -= 5;
-            rotatePacman = 90;
+            rotatePacman = 0;
             break;
         case 'g':
             moveUp += 5;
-            rotatePacman = -90;
+            rotatePacman = 180;
             break;
         case 'f':
             moveSide -= 5;
-            rotatePacman = 180;
+            rotatePacman = 90;
             break;
         case 'h':
             moveSide += 5;
-            rotatePacman = 0;
+            rotatePacman = -90;
             break;
         default:
             break;
