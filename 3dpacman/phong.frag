@@ -6,7 +6,7 @@ void main()
 {
 	vec4 Ia, Id, Is;
 	vec4 ambient, diffuse;
-	vec3 vVec = normalize(vpos);
+	vec3 vVec = normalize(-vpos);
 	
 	// ambient color
 	vec4 Ma = gl_FrontMaterial.ambient;
