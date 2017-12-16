@@ -72,10 +72,10 @@ namespace DDG
    
    void Viewer :: initGLSL( void )
    {
-      // shader.loadVertex( "shaders/vertex.glsl" );
-      // shader.loadFragment( "shaders/fragment.glsl" );
-      shader.loadVertex( "shaders/pacmanV.vert" );
-      shader.loadFragment( "shaders/pacmanF.frag" );
+      shader.loadVertex( "shaders/vertex.glsl" );
+      shader.loadFragment( "shaders/fragment.glsl" );
+      // shader.loadVertex( "shaders/pacmanV.vert" );
+      // shader.loadFragment( "shaders/pacmanF.frag" );
    }
 
    void Viewer :: menu( int value )

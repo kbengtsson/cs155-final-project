@@ -48,7 +48,7 @@ namespace DDG
    void HodgeStar2Form<T> :: build( const Mesh& mesh,
                                     SparseMatrix<T>& star2 )
    // builds a diagonal matrix mapping primal discrete 2-forms
-   // to dual discrete 2-forms
+   // to dual discrete 2-forms edit: 0-forms? 
    {
       int nF = mesh.faces.size();
 
