@@ -196,15 +196,6 @@ void DrawPacman(){
 }
 
 void DrawWithShader(){
-
-    // glBegin(GL_QUADS);
-    //      glColor3f(0.0,1.0,0.0);
-    //      glVertex3f(-0.5,1.0,-0.5);
-    //      glVertex3f(0.5,1.0,-0.5);
-    //      glVertex3f(0.5,1,0.5);
-    //      glVertex3f(-0.5,1.0,0.5);
-    // glEnd();
-
     shader->Bind();
 
     shader->SetUniform("intensity", intensity);
@@ -218,8 +209,10 @@ void DrawWithShader(){
     glFrontFace(GL_CCW);
     glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
-    FastNoise::FastNoise noise1; // Create a FastNoise object
-    noise1.SetNoiseType(FastNoise::Perlin); // Set the desired noise type
+    // We create three different instances of Perlin noise
+    // Each one has a different frequency for more realistic terrain
+    FastNoise::FastNoise noise1; 
+    noise1.SetNoiseType(FastNoise::Perlin); 
     noise1.SetFrequency(0.005);
     noise1.SetSeed(seed);
 
@@ -233,17 +226,19 @@ void DrawWithShader(){
     noise3.SetFrequency(0.02);
     noise3.SetSeed(seed);
 
-    // Populate array with Noise values
+    // Populate height map with Noise values
     for (int x = 0; x < width; x++)
     {
         for (int z = 0; z < height; z++)
         {
+            // We add our noise together, scaled appropriately
             heightMap[x][z] = noise1.GetNoise(x,z) + 
                               noise2.GetNoise(x,z)*0.5 + 
                               noise3.GetNoise(x,z)*0.25;
         }
     }
 
+    // Loop through the desired width and height and draw a grid with y-values modulated by height map
     for (int row = 0; row < height - 1; ++row) {
         for (int col = 0; col < width - 1; ++col) {
            
@@ -256,7 +251,6 @@ void DrawWithShader(){
             float z1 = row * zScale + zOffset, z2 = (row + 1) * zScale + zOffset, 
                   z3 = row * zScale + zOffset, z4 = (row + 1) * zScale + zOffset;
             
-
             SetNormalAndDrawTriangle(x1, x2, x3,
                                      y1, y2, y3,
                                      z1, z2, z3);
@@ -269,10 +263,7 @@ void DrawWithShader(){
     }
     shader->UnBind();
 
-    // std::cout << "Move Side: " << moveSide << " Move Up: " << moveUp << std::endl;
-    // std::cout << "Height Map Coords: X: " << width/2 + moveSide << " Z: " << height/2 + moveUp << std::endl;
-    // std::cout << "Teapot Position: X: " << moveSide*xScale << " Y: " << heightMap[width/2 + moveSide][height/2 + moveUp]*heightScale << " Z: " << moveUp*zScale << std::endl;
-
+    // Here we draw Pac-Man
     shader2->Bind();
     glPushMatrix();
         glTranslatef(moveSide*xScale, heightMap[height/2 + moveUp][width/2 + moveSide]*heightScale + radius, moveUp*zScale);
@@ -301,9 +292,12 @@ void SetNormalAndDrawTriangle(float x1, float x2, float x3,
 
     n1 /= mag; n2 /= mag; n3 /= mag;
 
+    // We set one normal per triangle face
     glNormal3f(n1, n2, n3);
     glBegin(GL_TRIANGLES);
         float avgHeight = (y1 + y2 + y3) / 3.0;
+
+        // Triangle color depends on height of terrain
         if (avgHeight < -1.0) {
             glColor3f(0.0,.467,0.745);
         }
@@ -360,16 +354,13 @@ void KeyCallback(unsigned char key, int x, int y)
         case 'z':
             zoom += 0.1;
             break;
-
         // Zoom Out
         case 'x':
             zoom -= 0.1;
             break;
-
         case 'w':
             rotateY += 5;
             break;
-
         case 'a':
             rotateX += 5;
             break;
@@ -385,6 +376,7 @@ void KeyCallback(unsigned char key, int x, int y)
         case 'u':
             intensity = fmax(-1.0, intensity - 0.1);
             break;
+        // Randomize terrain by changing the random seed
         case 'r':
             seed = rand();
             break;
@@ -442,8 +434,8 @@ void Setup()
 void SetupPacmanShader()
 {
     shader2 = new SimpleShaderProgram();
-    shader2->LoadVertexShader("../3dpacman/pacman.vert");
-    shader2->LoadFragmentShader("../3dpacman/pacman.frag");
+    shader2->LoadVertexShader("pacman-shaders/phong.vert");
+    shader2->LoadFragmentShader("pacman-shaders/phong.frag");
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 }
@@ -456,6 +448,7 @@ void init(void)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
+    // Initialize the random seed for Perlin Noise
     seed = rand();
     //CreateNoise(width, height);
 
@@ -472,8 +465,6 @@ int main(int argc, char** argv){
     // get the kernel file names from the command line
     vertexShader   = std::string(argv[1]);
     fragmentShader = std::string(argv[2]);
-
-    seed = rand();
 
     // Initialize GLUT
     glutInit(&argc, argv);
@@ -526,6 +517,15 @@ int main(int argc, char** argv){
     // ambient color
     GLfloat ambient0[]={0.2, 0.2, 0.22};
     glLightfv(GL_LIGHT0, GL_AMBIENT, ambient0);
+
+    GLfloat ambient2[]={1.0, 0.98, 0.0, 1.0};
+
+    glLightfv(GL_LIGHT2, GL_AMBIENT, ambient2);
+
+    GLfloat diffuse2[]={1.0, 1.0, 1.0};
+
+    glLightfv(GL_LIGHT2, GL_DIFFUSE, diffuse2);
+
 
     glutDisplayFunc(DisplayCallback);
     glutReshapeFunc(ReshapeCallback);
